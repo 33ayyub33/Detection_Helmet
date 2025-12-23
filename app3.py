@@ -96,7 +96,7 @@ if mode == "Upload Gambar":
         st.subheader(status)
 
 # ======================================================
-# MODE 2 : UPLOAD VIDEO
+# MODE 2 : UPLOAD VIDEO + DOWNLOAD HASIL
 # ======================================================
 elif mode == "Upload Video":
     uploaded_video = st.file_uploader(
@@ -105,14 +105,40 @@ elif mode == "Upload Video":
     )
 
     if uploaded_video:
-        tfile = tempfile.NamedTemporaryFile(delete=False)
+        # =========================
+        # SIMPAN VIDEO INPUT
+        # =========================
+        tfile = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
         tfile.write(uploaded_video.read())
         video_path = tfile.name
 
         cap = cv2.VideoCapture(video_path)
+
+        # =========================
+        # INFO VIDEO
+        # =========================
+        width  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        fps    = cap.get(cv2.CAP_PROP_FPS)
+        if fps == 0:
+            fps = 25  # fallback aman
+
+        # =========================
+        # VIDEO OUTPUT
+        # =========================
+        output_path = tempfile.NamedTemporaryFile(
+            delete=False, suffix=".mp4"
+        ).name
+
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        out = cv2.VideoWriter(output_path, fourcc, fps, (width, height))
+
         frame_placeholder = st.empty()
         st.info("▶️ Video sedang diproses...")
 
+        # =========================
+        # PROSES FRAME
+        # =========================
         while cap.isOpened():
             ret, frame = cap.read()
             if not ret:
@@ -124,11 +150,11 @@ elif mode == "Upload Video":
             for r in results:
                 for box in r.boxes:
                     conf = float(box.conf[0])
-                    if conf < 0.5: # Lewati jika kepercayaan di bawah 50%
+                    if conf < 0.5:
                         continue
+
                     cls_id = int(box.cls[0])
                     label = model.names[cls_id]
-                    conf = float(box.conf[0])
                     x1, y1, x2, y2 = map(int, box.xyxy[0])
 
                     if label == "Helm":
@@ -154,6 +180,9 @@ elif mode == "Upload Video":
                         2
                     )
 
+            # =========================
+            # STATUS
+            # =========================
             if ada_orang and ada_helm:
                 status = "MEMAKAI HELM"
                 warna = (0, 255, 0)
@@ -167,14 +196,36 @@ elif mode == "Upload Video":
                 status = "TIDAK ADA PENGENDARA"
                 warna = (255, 255, 0)
 
-            cv2.putText(frame, status, (20, 40),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, warna, 3)
+            cv2.putText(
+                frame, status, (20, 40),
+                cv2.FONT_HERSHEY_SIMPLEX, 1, warna, 3
+            )
 
+            # =========================
+            # TULIS KE VIDEO OUTPUT
+            # =========================
+            out.write(frame)
             frame_placeholder.image(frame, channels="BGR")
 
+        # =========================
+        # RELEASE
+        # =========================
         cap.release()
+        out.release()
         os.remove(video_path)
+
         st.success("✅ Video selesai diproses")
+
+        # =========================
+        # DOWNLOAD BUTTON
+        # =========================
+        with open(output_path, "rb") as f:
+            st.download_button(
+                label="⬇️ Download Video Hasil Deteksi",
+                data=f,
+                file_name="hasil_deteksi_helm.mp4",
+                mime="video/mp4"
+            )
 
 # ======================================================
 # MODE 3 : WEBCAM REALTIME (WEBRTC - DEPLOY SAFE)

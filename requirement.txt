@@ -1,11 +1,7 @@
 streamlit
-ultralytics
 opencv-python-headless
-torch
-pillow
+ultralytics
 numpy
-PIL
+Pillow
 streamlit-webrtc
 av
-tempfile
-os

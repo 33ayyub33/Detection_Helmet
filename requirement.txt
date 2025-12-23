@@ -1,0 +1,11 @@
+streamlit
+ultralytics
+opencv-python-headless
+torch
+pillow
+numpy
+PIL
+streamlit-webrtc
+av
+tempfile
+os

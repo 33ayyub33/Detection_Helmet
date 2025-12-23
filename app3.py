@@ -288,21 +288,21 @@ else:
 
         return av.VideoFrame.from_ndarray(img, format="bgr24")
 
-        webrtc_streamer(
-        key="helm-webrtc",
-        video_frame_callback=video_frame_callback,
-        rtc_configuration={
-            "iceServers": [
-                {"urls": ["stun:stun.l.google.com:19302"]},
-                {
-                    "urls": ["turn:openrelay.metered.ca:80"],
-                    "username": "openrelayproject",
-                    "credential": "openrelayproject"
-                }
-            ]
-        },
-        media_stream_constraints={
-            "video": {"width": 640, "height": 480},
-            "audio": False
-        }
-    )
+    webrtc_streamer(
+    key="helm-webrtc",
+    video_frame_callback=video_frame_callback,
+    rtc_configuration={
+        "iceServers": [
+            {"urls": ["stun:stun.l.google.com:19302"]},
+            {
+                "urls": ["turn:openrelay.metered.ca:80"],
+                "username": "openrelayproject",
+                "credential": "openrelayproject"
+            }
+        ]
+    },
+    media_stream_constraints={
+        "video": {"width": 640, "height": 480},
+        "audio": False
+    }
+)
